@@ -76,21 +76,31 @@
   }
 
   // ---------- barra ----------
+  // Recolhida = uma linha só de etiquetas; o botão "+N" abre as demais.
+  const ROW = 20; // altura de uma linha de botões (px)
   const BAR_CSS = `
     :host { all: initial; display: block; }
-    .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 6px 8px;
+    .bar { display: flex; align-items: flex-start; gap: 4px; padding: 5px 8px;
       border-bottom: 1px solid #ede9fe; background: #faf5ff; box-sizing: border-box;
       font: 12px/1.3 Arial, Helvetica, sans-serif; color: #1f2937; }
-    .lbl { font-weight: 700; color: #5b21b6; margin-right: 2px; white-space: nowrap; }
-    button { all: unset; cursor: pointer; box-sizing: border-box; white-space: nowrap;
+    .lbl { font-weight: 700; color: #5b21b6; white-space: nowrap; line-height: ${ROW}px; flex: none; }
+    .tags { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+    .bar:not(.open) .tags { max-height: ${ROW}px; overflow: hidden; }
+    .ctrl { flex: none; display: flex; gap: 4px; }
+    button { all: unset; cursor: pointer; box-sizing: border-box; white-space: nowrap; height: ${ROW}px;
       font: 600 11px/1.25 Arial, Helvetica, sans-serif; border-radius: 10px; padding: 2px 8px; }
     button:focus-visible { outline: 2px solid #7c3aed; outline-offset: 1px; }
-    .tag { border: 1.5px solid var(--c); color: var(--c); background: #fff; }
+    .tag { border: 1.5px solid var(--c); color: #374151; background: #fff; max-width: 160px;
+      overflow: hidden; text-overflow: ellipsis; }
     .tag[aria-pressed="true"] { background: var(--c); color: var(--fg); }
-    .mode, .clear { color: #5b21b6; background: #ede9fe; border: 1px solid #c4b5fd; }
-    .clear { background: transparent; border-color: transparent; text-decoration: underline; }
-    .empty { flex-basis: 100%; color: #6b7280; font-size: 11px; padding-top: 2px; }
+    .more, .mode { color: #5b21b6; background: #ede9fe; border: 1px solid #c4b5fd; }
+    .more.sel { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+    .more[hidden] { display: none; }
+    .clear { color: #5b21b6; padding: 2px 4px; text-decoration: underline; }
+    .empty { color: #6b7280; font-size: 11px; padding: 0 8px 4px; background: #faf5ff;
+      border-bottom: 1px solid #ede9fe; font-family: Arial, Helvetica, sans-serif; }
   `;
+  let open = false; // barra aberta (todas as linhas) ou recolhida (uma linha)
 
   function toggle(id) {
     const on = new Set(selected);
@@ -105,14 +115,18 @@
     const style = document.createElement('style');
     style.textContent = BAR_CSS;
     const box = document.createElement('div');
-    box.className = 'bar';
+    box.className = 'bar' + (open ? ' open' : '');
     box.setAttribute('role', 'toolbar');
     box.setAttribute('aria-label', 'Filtrar conversas por etiqueta');
 
     const lbl = document.createElement('span');
     lbl.className = 'lbl';
     lbl.textContent = '🏷 Filtrar:';
-    box.appendChild(lbl);
+    const tags = document.createElement('div');
+    tags.className = 'tags';
+    const ctrl = document.createElement('div');
+    ctrl.className = 'ctrl';
+    box.append(lbl, tags, ctrl);
 
     for (const t of library) {
       const b = document.createElement('button');
@@ -120,12 +134,20 @@
       b.className = 'tag';
       b.dataset.id = t.id;
       b.textContent = t.name;
+      b.title = t.name;
       b.style.setProperty('--c', t.color);
       b.style.setProperty('--fg', textColor(t.color));
       b.setAttribute('aria-pressed', String(selected.includes(t.id)));
       b.addEventListener('click', () => toggle(t.id));
-      box.appendChild(b);
+      tags.appendChild(b);
     }
+
+    const more = document.createElement('button');
+    more.type = 'button';
+    more.className = 'more';
+    more.hidden = true;
+    more.addEventListener('click', () => { open = !open; render(); });
+    ctrl.appendChild(more);
 
     if (selected.length >= 2) {
       const m = document.createElement('button');
@@ -136,8 +158,9 @@
         ? 'Mostrando quem tem TODAS as etiquetas escolhidas. Clique para "qualquer uma".'
         : 'Mostrando quem tem QUALQUER UMA das etiquetas escolhidas. Clique para "todas".';
       m.addEventListener('click', () => { mode = mode === 'all' ? 'any' : 'all'; render(); });
-      box.appendChild(m);
+      ctrl.appendChild(m);
     }
+    root.append(style, box);
     if (selected.length) {
       const c = document.createElement('button');
       c.type = 'button';
@@ -145,15 +168,44 @@
       c.textContent = 'limpar';
       c.title = 'Mostrar todas as conversas de novo';
       c.addEventListener('click', () => { selected = []; render(); });
-      box.appendChild(c);
+      ctrl.appendChild(c);
       if (!shown) {
         const e = document.createElement('div');
         e.className = 'empty';
         e.textContent = 'Nenhuma conversa carregada na lista tem essa etiqueta.';
-        box.appendChild(e);
+        root.appendChild(e);
       }
     }
-    root.append(style, box);
+    updateMore();
+  }
+
+  // Conta as etiquetas que não cabem na primeira linha e ajusta o botão "+N" / "menos".
+  function updateMore() {
+    if (!bar) return;
+    const more = bar.root.querySelector('.more');
+    const btns = [...bar.root.querySelectorAll('button.tag')];
+    if (!more || !btns.length) return;
+    // Mede com o "+N" visível, porque ele mesmo ocupa espaço na linha; repete até a conta estabilizar.
+    const top = btns[0].offsetTop;
+    const count = () => btns.filter((b) => b.offsetTop > top);
+    more.hidden = false;
+    more.textContent = `+${btns.length} ▾`;
+    let extra = count();
+    for (let i = 0; i < 3 && !open && extra.length; i++) {
+      more.textContent = `+${extra.length} ▾`;
+      const again = count();
+      if (again.length === extra.length) break;
+      extra = again;
+    }
+    if (!open && !extra.length) { more.hidden = true; return; }
+    const hiddenSel = open ? 0 : extra.filter((b) => b.getAttribute('aria-pressed') === 'true').length;
+    more.textContent = open ? 'menos ▴' : `+${extra.length} ▾`;
+    more.classList.toggle('sel', hiddenSel > 0);
+    more.setAttribute('aria-expanded', String(open));
+    more.title = open
+      ? 'Mostrar só uma linha de etiquetas'
+      : `Mostrar mais ${extra.length} etiqueta${extra.length > 1 ? 's' : ''}` +
+        (hiddenSel ? ` (${hiddenSel} escolhida${hiddenSel > 1 ? 's' : ''} entre elas)` : '');
   }
 
   function ensureBar(list) {
@@ -164,6 +216,8 @@
     const root = host.attachShadow({ mode: 'open' });
     list.before(host);
     bar = { host, root, sig: null };
+    // A largura da coluna muda (janela, zoom): recalcula quantas etiquetas cabem.
+    if (typeof ResizeObserver === 'function') new ResizeObserver(updateMore).observe(host);
   }
 
   function render() {
@@ -178,7 +232,7 @@
       ensureBar(list);
       const shown = applyFilter(list);
       // Só redesenha a barra se algo nela mudou (preserva o foco do teclado).
-      const sig = JSON.stringify([library, selected, mode, shown > 0]);
+      const sig = JSON.stringify([library, selected, mode, open, shown > 0]);
       if (bar.sig !== sig) { renderBar(shown); bar.sig = sig; }
     }
     if (observer) observer.takeRecords(); // ignora as mudanças que nós mesmos fizemos
@@ -198,6 +252,7 @@
     // childList pega itens novos, troca de aba e paginação; characterData pega nome alterado.
     observer = new MutationObserver(schedule);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    window.addEventListener('resize', updateMore);
   }
   if (document.body) start();
   else document.addEventListener('DOMContentLoaded', start);
