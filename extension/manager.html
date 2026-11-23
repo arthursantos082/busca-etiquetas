@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Etiquetas ChatClinic</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 Arial, Helvetica, sans-serif; color: #1f2937; background: #f6f7fb; }
+  .wrap { width: 400px; max-width: 100%; margin: 0 auto; padding: 16px; }
+  body.page .wrap { width: 560px; padding: 32px 16px; }
+  h1 { font-size: 17px; margin: 0 0 2px; display: flex; align-items: center; gap: 8px; }
+  h1 img { width: 22px; height: 22px; }
+  .hint { color: #6b7280; font-size: 12px; margin: 0 0 14px; }
+  .card { background: #fff; border: 1px solid #e8eaf0; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; margin: 0 0 10px; display: flex; justify-content: space-between; }
+  h2 span { letter-spacing: 0; text-transform: none; font-weight: normal; }
+  label.f { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .namebox { position: relative; }
+  input[type=text] { width: 100%; padding: 9px 52px 9px 10px; border: 1px solid #cfd4dc; border-radius: 8px; font: inherit; }
+  input[type=text]:focus { outline: 2px solid #c4b5fd; border-color: #7c3aed; }
+  .count { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #fef3c7; color: #92400e; font-size: 11px; border-radius: 8px; padding: 1px 7px; }
+  .colors { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; align-items: center; }
+  .sw { width: 24px; height: 24px; border-radius: 7px; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .sw.sel { outline: 2px solid #1f2937; outline-offset: 1px; }
+  input[type=color] { width: 30px; height: 26px; border: 1px solid #cfd4dc; border-radius: 7px; padding: 1px; background: #fff; cursor: pointer; }
+  .preview { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+  .btns { display: flex; gap: 8px; }
+  button { font: 700 13px Arial, Helvetica, sans-serif; border: 0; border-radius: 8px; padding: 9px 14px; cursor: pointer; }
+  .primary { background: #7c3aed; color: #fff; flex: 1; }
+  .primary:disabled { background: #c4b5fd; cursor: default; }
+  .ghost { background: #f3f4f6; color: #374151; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 14px; padding: 4px 6px 4px 11px; font-weight: 700; font-size: 13px; cursor: pointer; max-width: 100%; }
+  .chip .x { width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.18); display: grid; place-items: center; font-size: 11px; }
+  .chip .x:hover { background: rgba(0,0,0,.35); }
+  .chip.editing { outline: 2px dashed #1f2937; outline-offset: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .small { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+  .conv { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid #f1f2f5; }
+  .conv:first-child { border-top: 0; }
+  .conv .n { font-weight: 700; font-size: 13px; min-width: 90px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .conv .c { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+  .mini { border-radius: 9px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+  .link { background: none; color: #6b7280; padding: 2px 4px; font-size: 12px; font-weight: normal; text-decoration: underline; }
+  .empty { color: #9ca3af; font-size: 12px; }
+  .backup { display: flex; gap: 8px; flex-wrap: wrap; }
+  .backup button { flex: 1; }
+  #file { display: none; }
+  .credit { text-align: center; color: #9ca3af; font-size: 11px; margin: 4px 0 2px; }
+  .credit b { color: #6b7280; }
+  .toast { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><img src="icons/icon48.png" alt="">Etiquetas ChatClinic</h1>
+  <p class="hint">Só você vê estas etiquetas. Elas ficam salvas neste navegador.</p>
+
+  <div class="card">
+    <h2 id="formTitle">Nova etiqueta</h2>
+    <label class="f" for="name">Nome da etiqueta</label>
+    <div class="namebox">
+      <input type="text" id="name" maxlength="25" placeholder="Ex: Retornar ligação" autocomplete="off">
+      <span class="count" id="count">25</span>
+    </div>
+    <div class="colors" id="colors"></div>
+    <div class="preview">Prévia: <span class="chip" id="preview" style="cursor:default">Etiqueta</span></div>
+    <div class="btns">
+      <button class="primary" id="save" disabled>+ Criar etiqueta</button>
+      <button class="ghost" id="cancel" hidden>Cancelar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Etiquetas ativas <span id="total"></span></h2>
+    <div class="chips" id="library"></div>
+    <div class="small">Clique numa etiqueta para editar o nome ou a cor. O × exclui.</div>
+  </div>
+
+  <div class="card">
+    <h2>Conversas etiquetadas <span id="convTotal"></span></h2>
+    <div id="convs"></div>
+  </div>
+
+  <div class="card">
+    <h2>Cópia de segurança</h2>
+    <div class="backup">
+      <button class="ghost" id="export">⬇ Exportar</button>
+      <button class="ghost" id="import">⬆ Importar</button>
+      <input type="file" id="file" accept="application/json,.json">
+    </div>
+    <div class="small">Use para guardar suas etiquetas ou levá-las para outro computador.</div>
+  </div>
+  <div class="credit">Desenvolvido por <b>Gleidston Santos</b></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="manager.js"></script>
+</body>
+</html>

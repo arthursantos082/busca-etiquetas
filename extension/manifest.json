@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Etiquetas ChatClinic",
+  "version": "1.0.1",
+  "description": "Adicione suas próprias etiquetas às conversas do ChatClinic. Desenvolvido por Gleidston Santos.",
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Gerenciar etiquetas",
+    "default_popup": "manager.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "manager.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://app.chatclinic.com.br/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "author": "Gleidston Santos"
+}

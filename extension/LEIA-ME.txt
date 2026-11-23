@@ -1,0 +1,39 @@
+ETIQUETAS CHATCLINIC — como instalar
+====================================
+Desenvolvido por Gleidston Santos
+
+1. Descompacte o arquivo .zip (botão direito > Extrair tudo).
+   Guarde a pasta "etiquetas-chatclinic" num lugar fixo (ex.: Documentos).
+   Não apague a pasta depois: o Chrome usa ela.
+
+2. No Chrome, abra o endereço:  chrome://extensions
+
+3. Ligue "Modo do desenvolvedor" (canto superior direito).
+
+4. Clique em "Carregar sem compactação" e escolha a pasta "etiquetas-chatclinic".
+
+5. Clique no ícone de quebra-cabeça do Chrome e fixe "Etiquetas ChatClinic"
+   (o ícone roxo de etiqueta).
+
+6. Recarregue a aba do ChatClinic (F5).
+
+
+COMO USAR
+---------
+- Abra uma conversa no ChatClinic. Ao lado do nome, no topo, aparece o botão
+  "🏷 Etiquetas". Clique e marque as etiquetas que quiser.
+- As etiquetas marcadas aparecem também na lista de conversas, abaixo do nome.
+- Clicar numa etiqueta abre a caixinha para marcar/desmarcar.
+- Para criar, renomear, trocar a cor ou excluir etiquetas: clique no ícone roxo
+  da extensão no Chrome.
+- Passe o mouse sobre uma etiqueta para ver quando ela foi marcada.
+
+
+IMPORTANTE
+----------
+- As etiquetas ficam salvas só neste navegador. Ninguém mais vê.
+- Elas são guardadas pelo NOME do contato. Dois contatos com o mesmo nome
+  exato vão compartilhar as etiquetas.
+- Use "Exportar" de vez em quando para ter uma cópia de segurança.
+- Para instalar em outro computador, repita os passos acima. Se quiser levar
+  as etiquetas junto, use Exportar aqui e Importar lá.
