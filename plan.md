@@ -59,6 +59,31 @@ Backup exportado: `{ app: 'etiquetas-chatclinic', version: 1, exportedAt, librar
 4. A extensão A não expõe nenhuma API para outras extensões (não há `onMessageExternal`
    nem `externally_connectable`).
 
+### 2.3a ChatClinic ao vivo (estudado em 2026-11-23, somente leitura, sem abrir conversas)
+- Página principal `app.chatclinic.com.br/` → o app roda num **iframe de mesma origem**
+  (`/blank_chat_v2/blank_chat_v2.php`). É PHP + **jQuery 3.4.1** + Bootstrap + socket.io. Não usa framework SPA.
+  A extensão A funciona porque usa `all_frames: true`.
+- **Lista de conversas:** `ul#atendimentos_contatos > div.conversation#contato-<id>`. Cada item traz atributos úteis:
+  - `data-id`: **ID numérico do contato**. É estável e melhor como chave do que o nome.
+  - `data-id8`: telefone (13 dígitos).
+  - `data-etiq`: etiqueta **nativa** do ChatClinic, uma só (98 de 100 = "Lotérico").
+  - `data-atendente`: e-mail do atendente.
+  - `data-depart`: departamento.
+  - `onclick="chamarChatAtendimento(this)"`: **é assim que a conversa abre**. Para abrir, basta um clique no item.
+- Título: `.conversation__name--title`. A extensão A injeta `span[data-etq="strip"]` logo depois de `.conversation__name`.
+- **A lista é paginada** (`#paginaAtual` = 2, 100 itens carregados; abas Atendimento 86 / Espera 46 / Contatos).
+  Um cliente etiquetado **pode não estar carregado na lista** (conversa encerrada ou em página não carregada).
+- **Busca nativa:** `#userSearch` ("Procure aqui..."), `keyup` com debounce → `pesquisa_atendimentos()`.
+  Essa função remove acentos, esconde/mostra itens e pode chamar `listar_atendimentos()`. Existe também
+  `pesquisar_connversa()` → `filtro_conversa_chat.php` e a aba **Contatos** (`buscar_lista_contatos`).
+- **Etiquetas nativas do ChatClinic já existem:** `buscarEtiquetas(nome)` (filtra a lista por `data-etiq`),
+  `filtrar_etiquetas()` (AJAX para `blank_chat_backend.php`), `cadastro_etiqueta`, além do botão de filtro
+  avançado (funil). São **do servidor e compartilhadas pela equipe**, mas cada contato tem uma só (pelo que vi).
+- Uso real da extensão A neste perfil (chips visíveis nos 100 itens): PORTO 40, TOKIO 32, Aguardando Confirmação 29,
+  Enviar documentos 24, FECHADO 24, +1 lotérica 8, além de outras. Ou seja, A é usada como **seguradora + status do funil**.
+- O Chrome está **traduzindo a página** (aparecem `<font>` aninhados nas prévias). O título do contato não foi traduzido,
+  mas isso é um risco para quem usa o nome como chave (R6).
+
 ### 2.3 Restrição técnica central
 **Uma extensão do Chrome não consegue ler o `chrome.storage.local` de outra.** Content scripts de
 extensões diferentes rodam em "mundos isolados" e também não compartilham variáveis.
@@ -131,12 +156,19 @@ Carregar: chrome://extensions → Modo do desenvolvedor → Carregar sem compact
   (a) a extensão for **removida** e carregada de novo, (b) a pasta mudar de caminho, ou (c) for adicionada uma `key` ao manifest.
   Mitigação obrigatória: **Exportar** antes; atualizar substituindo os arquivos **na mesma pasta** e clicar em "Recarregar";
   conferir; se o ID mudar, **Importar**. Isso vale para qualquer opção que mexa em A.
+- R6 — A tradução automática do Chrome ou nomes repetidos podem descasar a chave por nome. Mitigação: passar a gravar também o
+  `data-id` do contato, sem perder a chave por nome (migração compatível).
+- R7 — O cliente encontrado não está carregado na lista → o clique não está disponível. Plano: 1) clicar no item, se estiver na lista;
+  2) senão, colocar o nome em `#userSearch` e disparar `keyup`; 3) senão, copiar nome/telefone e avisar.
 
 ---
 
 ## 6. Decisões abertas / pendências
-- **P1 (fato, meu)** — Estudar ao vivo o DOM do ChatClinic (campo de busca, lista, virtualização).
-  Bloqueado: Claude in Chrome desconectado.
+- ~~P1~~ — DOM do ChatClinic estudado ao vivo (ver §2.3a).
+- **D7 (nova)** — A busca é sobre **quais etiquetas**? Só as da extensão A (pessoais, várias por cliente), só as
+  nativas do ChatClinic (`data-etiq`, compartilhadas) ou as duas juntas? Antes, conferir se o filtro nativo (funil)
+  já não resolve parte do problema.
+- **D8 (nova)** — Gravar o `data-id` do contato junto com o nome na extensão A? Isso dá uma chave estável e permite abrir a conversa com precisão.
 - **D1–D6** — a decidir no grill-me (será feito numa nova conversa, com as skills carregadas).
   Perguntas já identificadas, com a recomendação atual:
   - D1 Integração com A: **Opção B (busca como módulo dentro de A, v1.1.0)**, desde que haja permissão para
@@ -145,7 +177,7 @@ Carregar: chrome://extensions → Modo do desenvolvedor → Carregar sem compact
   - D2 B é somente leitura (marcar/desmarcar continua em A).
   - D3 Interface: painel dentro do ChatClinic; ícone da extensão como atalho.
   - D4 Filtros V1: várias etiquetas (todas/qualquer), texto no nome, idade da marcação.
-  - D5 Clicar no resultado abre a conversa; *fallback*: copiar o nome (depende de P1).
+  - D5 Clicar no resultado abre a conversa pela ordem de R7 (clique no item → `#userSearch` → copiar).
   - D6 Distribuição: .zip sem compactação + LEIA-ME, fora da Chrome Web Store.
 
 ## 7. Log de decisões
