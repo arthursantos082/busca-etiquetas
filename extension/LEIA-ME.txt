@@ -1,6 +1,6 @@
-ETIQUETAS CHATCLINIC — versão 1.1.1
+ETIQUETAS CHATCLINIC — versão 1.1.0
 ===================================
-Desenvolvido por Gleidston Santos. Versão 1.1.1 com busca por etiquetas.
+Desenvolvido por Gleidston Santos. Versão 1.1.0 com busca por etiquetas.
 
 Escolha o seu caso:
   A) Este computador JÁ TEM a extensão (qualquer versão) -> veja "ATUALIZAR"
@@ -30,7 +30,7 @@ extensão ou carregar uma pasta diferente, elas somem. Por isso a atualização
    escolha "Substituir os arquivos no destino".
 
 5. Volte a  chrome://extensions  e clique no botão de RECARREGAR (a setinha
-   redonda) no cartão "Etiquetas ChatClinic". O cartão deve mostrar 1.1.1.
+   redonda) no cartão "Etiquetas ChatClinic". O cartão deve mostrar 1.1.0.
    NÃO clique em "Remover". NÃO use "Carregar sem compactação" de novo.
 
 6. Vá até a aba do ChatClinic e aperte F5 (recarregar a página).

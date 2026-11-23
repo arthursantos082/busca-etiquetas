@@ -251,7 +251,7 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
    - [x] **T6** v1.1.0: `manifest.json` 1.1.0; `extension/LEIA-ME.txt` reescrito (ATUALIZAR na mesma pasta com Exportar antes,
      Recarregar + F5; INSTALAR; COMO USAR; backup automático). Pacote: `dist/etiquetas-chatclinic-v1.1.0.zip`
      (fora do git; pasta `etiquetas-chatclinic/` dentro).
-   - [x] **v1.1.1 — etiquetas piscando ao chegar mensagem** (2026-11-23, medido ao vivo): o ChatClinic recria **a lista
+   - [x] **Correção (incluída na v1.1.0; release e tag atualizados) — etiquetas piscando ao chegar mensagem** (2026-11-23, medido ao vivo): o ChatClinic recria **a lista
      inteira** (201 itens removidos e recriados de uma vez); as 72 faixas sumiam por ~360 ms (espera de 200 ms do
      `content.js`) e, com filtro ativo, a lista toda aparecia por ~150 ms. Correção: quando chegam itens novos na lista,
      `content.js` e `bar.js` redesenham dentro do MutationObserver (antes da tela ser pintada). Custo medido do render
