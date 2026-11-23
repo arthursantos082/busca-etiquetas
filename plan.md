@@ -1,21 +1,19 @@
 # plan.md — Busca por Etiquetas (ChatClinic)
 
 > Documento vivo. Segue o fluxo *spec-driven* (Especificar → Planejar → Tarefas → Implementar),
-> com uma porta de revisão humana entre cada fase. **Fase atual: ESPECIFICAR (grill-me em andamento).**
-> Nenhum código será escrito antes das decisões abertas (§6) serem fechadas.
+> com uma porta de revisão humana entre cada fase. **Fase atual: PLANEJAR.** A spec foi fechada no grill-me de 2026-11-23
+> (ver §3 e §7). Próximo passo: quebrar em tarefas (§8) e passar pela sua revisão.
 
 ---
 
 ## 1. Objetivo
 
-Criar a função **"Busca por Etiquetas"**, seja como segunda extensão ou como módulo da extensão existente
-(decisão D1; a recomendação atual é módulo), que permita ao atendente
-**encontrar clientes pelas etiquetas** que ele já marcou com a extensão existente
-**Etiquetas ChatClinic**, usando as mesmas etiquetas e as mesmas marcações de cada pessoa
-(sem recriar nada).
+Criar a função **"Busca por Etiquetas"** como **módulo da extensão existente Etiquetas ChatClinic** (A → v1.1.0).
+Ela permite ao atendente **filtrar a lista de conversas do ChatClinic pelas etiquetas** que ele mesmo marcou com A,
+usando as mesmas etiquetas e marcações (sem recriar nada).
 
-Exemplo de uso: "me mostre todos os clientes com a etiqueta *Retornar ligação*" → lista de nomes
-→ clico num nome → a conversa abre no ChatClinic.
+Exemplo de uso (rotina diária): escolho *Retornar ligação* na barra de etiquetas → a lista da esquerda mostra só quem
+tem essa etiqueta → clico no item → a conversa abre, como já acontece hoje.
 
 ---
 
@@ -109,40 +107,67 @@ em nenhuma opção que funcione no dia a dia. Por isso a separação só traria 
 
 ---
 
-## 3. Proposta (rascunho — depende do grill-me)
+## 3. Spec — Etiquetas ChatClinic v1.1.0 (fechada em 2026-11-23)
 
-- **Extensão B "Busca por Etiquetas"** (MV3), content script em `app.chatclinic.com.br`.
-- Botão/painel "🔎 Buscar por etiqueta" dentro do ChatClinic (Shadow DOM, mesmo visual roxo de A).
-- Filtros: escolher 1+ etiquetas (modo **todas** / **qualquer uma**), texto no nome, idade da marcação.
-- Resultado: lista de clientes com chips + "marcada em dd/mm às hh:mm", ordenada pela marcação mais recente.
-- Clicar num cliente → abrir a conversa no ChatClinic (mecanismo depende de P1: usar a busca nativa
-  do ChatClinic ou clicar no item da lista; *fallback*: copiar o nome).
-- Somente leitura sobre os dados de A (B não marca/desmarca — isso continua em A). *A confirmar.*
+**Onde:** módulo isolado (`search/`) dentro da extensão A. Não haverá uma segunda extensão.
 
-### 3.1 Estrutura prevista do repositório
+**Filtro na própria lista**
+- Uma barra de etiquetas fica acima da lista de conversas, junto de `#userSearch` ("Procure aqui..."), com o visual roxo de A.
+- Ao escolher 1 ou mais etiquetas, a lista **esconde** os itens `div.conversation` que não têm a etiqueta.
+  O clique abre a conversa pelo mecanismo nativo (`chamarChatAtendimento`). Não há painel separado.
+- Modo com 2 ou mais etiquetas: **"qualquer uma"** por padrão, com um botão ao lado para trocar para **"todas"**.
+- A ordem é a do próprio ChatClinic.
+- Clientes etiquetados que não estão na lista carregada **não aparecem**. A busca não tenta abrir conversas fora da lista.
+- O filtro vale para as abas (Atendimento/Espera) e para os itens que chegam depois (MutationObserver).
+  **Ao recarregar a página, ele recomeça limpo.**
+- Fica **fora da V1:** contador por etiqueta, idade da marcação, texto no nome (a busca nativa já faz isso) e ordenação própria.
+
+**Dados**
+- O filtro usa só as etiquetas de A, que são pessoais e ficam no navegador. As nativas do ChatClinic (`data-etiq`) ficam fora.
+- **A busca é só leitura.** Marcar e desmarcar continua no botão 🏷 da conversa.
+- **Chave nome + ID (D8):** A passa a gravar o `data-id` do contato junto com o nome. A migração é compatível:
+  as marcações antigas continuam pelo nome e ganham o ID na primeira vez que o contato aparecer na tela.
+  O telefone não é gravado.
+
+**Proteção contra perda de etiquetas** (nova permissão: `downloads`)
+- **Backup automático:** na primeira abertura do ChatClinic no dia, A salva
+  `Downloads/etiquetas-chatclinic/backup-AAAA-MM-DD.json` e mantém só os últimos 7.
+- **Restaurar:** se A abrir vazia depois de já ter sido usada, aparece um aviso no popup e no ChatClinic com o botão
+  "Restaurar backup", que abre a janela para escolher o arquivo.
+
+**Distribuição:** manual nas mais de 10 máquinas. Cada atualização substitui os arquivos **na mesma pasta** e clica em
+"Recarregar" (ver R5), com um LEIA-ME de atualização.
+
+**A verificar na implementação** (fatos que eu levanto, sem decisão sua):
+- Como o filtro convive com `pesquisa_atendimentos()`, que também esconde e mostra itens.
+- Se as outras abas da lista existem no DOM ao mesmo tempo.
+- Se `chrome.downloads.removeFile` consegue apagar backups antigos quando o histórico de downloads foi limpo.
+
+### 3.1 Estrutura do repositório
 ```
 busca-etiquetas/
   plan.md
-  extension/            → extensão B (manifest.json, background.js, content.js, search/*.js, icons/)
-  patches/etiquetas-chatclinic/  → mudança mínima proposta para A (se Opção A)
-  tests/                → testes unitários da lógica de filtro (Node, sem dependências)
+  extension/   → cópia versionada de A (1º commit = v1.0.1 original; mudanças = commits seguintes)
+    search/    → módulo novo da busca (filtro, lógica pura testável)
+  tests/       → testes unitários da lógica de filtro, migração e rotação de backup (Node, sem dependências)
 ```
+O código instalado (`Downloads/etiquetas-chatclinic/`) **só muda quando você copiar os arquivos para lá.**
 
 ### 3.2 Comandos (previstos)
 ```
-Testes:   node --test tests/
-Carregar: chrome://extensions → Modo do desenvolvedor → Carregar sem compactação → pasta extension/
+Testes:   node --test tests/      (Node ainda não está instalado nesta máquina; Python 3.15 está)
+Instalar: Exportar → copiar extension/* por cima de Downloads/etiquetas-chatclinic/ → chrome://extensions → Recarregar → conferir
 ```
 
 ---
 
 ## 4. Limites (Boundaries)
-- **Sempre:** manter B somente-leitura sobre os dados de A; tratar nomes como texto (nunca `innerHTML`);
-  não enviar dados de clientes para fora do navegador; testes da lógica de filtro antes de cada commit.
-- **Perguntar antes:** qualquer alteração na extensão A; adicionar dependências/build; novas permissões.
+- **Sempre:** manter a busca somente leitura; tratar nomes como texto (nunca `innerHTML`);
+  não enviar dados de clientes para fora do navegador; testes da lógica de filtro antes de cada commit;
+  migração de dados sempre compatível (nada que apague `assignments` existentes).
+- **Perguntar antes:** alterações em A fora do escopo da §3; adicionar dependências/build; novas permissões além de `downloads`.
 - **Git:** commits e PRs **sem nenhuma atribuição de IA**: sem `Co-Authored-By`, sem "Generated with…" e sem
-  identidade do Claude como autor. Autor = identidade git do usuário. *(Hoje `user.name`/`user.email` não estão
-  configurados nesta máquina, então é preciso configurar antes do primeiro commit.)*
+  identidade do Claude como autor. Autor = identidade git do usuário (já configurada: `Arthur`).
 - **Nunca:** gravar no storage de A sem acordo; mandar dados para servidores externos; publicar na Chrome Web Store sem decisão explícita.
 
 ---
@@ -158,37 +183,41 @@ Carregar: chrome://extensions → Modo do desenvolvedor → Carregar sem compact
   conferir; se o ID mudar, **Importar**. Isso vale para qualquer opção que mexa em A.
 - R6 — A tradução automática do Chrome ou nomes repetidos podem descasar a chave por nome. Mitigação: passar a gravar também o
   `data-id` do contato, sem perder a chave por nome (migração compatível).
-- R7 — O cliente encontrado não está carregado na lista → o clique não está disponível. Plano: 1) clicar no item, se estiver na lista;
-  2) senão, colocar o nome em `#userSearch` e disparar `keyup`; 3) senão, copiar nome/telefone e avisar.
+- ~~R7~~ — Cliente fora da lista carregada: **resolvido por escopo**, porque ele simplesmente não aparece no filtro.
+- R8 — A busca nativa (`pesquisa_atendimentos`) e o filtro de etiquetas brigam pela visibilidade dos itens. Mitigação: esconder
+  com uma classe própria (`display:none !important`), independente do `style` que a busca nativa altera.
+- R9 — Backup diário com nomes de clientes fica em Downloads. Ele é local, mas é visível para quem usa a máquina. A rotação de 7
+  arquivos depende do histórico de downloads do Chrome.
 
 ---
 
 ## 6. Decisões abertas / pendências
-- ~~P1~~ — DOM do ChatClinic estudado ao vivo (ver §2.3a).
-- **D7 (nova)** — A busca é sobre **quais etiquetas**? Só as da extensão A (pessoais, várias por cliente), só as
-  nativas do ChatClinic (`data-etiq`, compartilhadas) ou as duas juntas? Antes, conferir se o filtro nativo (funil)
-  já não resolve parte do problema.
-- **D8 (nova)** — Gravar o `data-id` do contato junto com o nome na extensão A? Isso dá uma chave estável e permite abrir a conversa com precisão.
-- **D1–D6** — a decidir no grill-me (será feito numa nova conversa, com as skills carregadas).
-  Perguntas já identificadas, com a recomendação atual:
-  - D1 Integração com A: **Opção B (busca como módulo dentro de A, v1.1.0)**, desde que haja permissão para
-    alterar A e ninguém mais publique versões dela. Fatos que podem mudar isso: quem mantém A hoje; se há
-    autorização do autor; quantos atendentes/máquinas usam A.
-  - D2 B é somente leitura (marcar/desmarcar continua em A).
-  - D3 Interface: painel dentro do ChatClinic; ícone da extensão como atalho.
-  - D4 Filtros V1: várias etiquetas (todas/qualquer), texto no nome, idade da marcação.
-  - D5 Clicar no resultado abre a conversa pela ordem de R7 (clique no item → `#userSearch` → copiar).
-  - D6 Distribuição: .zip sem compactação + LEIA-ME, fora da Chrome Web Store.
+Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
 
 ## 7. Log de decisões
 | # | Decisão | Data |
 |---|---|---|
-| — | (vazio) | |
+| D7 | Busca **pessoal**, só sobre as etiquetas de A. As nativas do ChatClinic ficam fora. | 2026-11-23 |
+| D1 | **Módulo dentro de A (v1.1.0).** A é de vocês, e o Gleidston não lança mais versões. | 2026-11-23 |
+| — | Uso principal: **rotina diária** de acompanhamento. | 2026-11-23 |
+| D8 | A grava **nome + `data-id`** do contato, com migração compatível. Sem telefone. | 2026-11-23 |
+| D2 | A busca é **só leitura**. | 2026-11-23 |
+| D6 | Distribuição **manual, na mesma pasta**, em mais de 10 máquinas, com LEIA-ME de atualização. | 2026-11-23 |
+| D3 | **Filtro na própria lista** do ChatClinic, com uma barra junto de "Procure aqui...". Sem painel nem popup. | 2026-11-23 |
+| D5 | Clientes fora da lista carregada **não aparecem**. O clique usa o mecanismo nativo. | 2026-11-23 |
+| D4 | V1: **várias etiquetas**, modo padrão **"qualquer uma"** (com troca para "todas"). Sem contador, idade da marcação nem texto. | 2026-11-23 |
+| — | Ordem: a do ChatClinic (consequência de D3; a escolha "mais recente primeiro" deixou de valer). | 2026-11-23 |
+| — | O filtro **recomeça limpo** ao recarregar a página. | 2026-11-23 |
+| D9 | **Backup automático** 1x/dia em Downloads, guardando os últimos 7 (permissão `downloads`). | 2026-11-23 |
+| D10 | Aviso **"Restaurar backup"** quando A abrir vazia depois de já ter sido usada. | 2026-11-23 |
+| D11 | Código de A **versionado neste repositório** (`extension/`). A pasta instalada só muda por cópia manual. | 2026-11-23 |
 
 ---
 
-## 8. Próximas fases (após o grill-me)
-1. Fechar spec (§3 definitivo) → revisão sua.
-2. Quebrar em tarefas verticais (ex.: T1 ponte A↔B lendo dados; T2 painel com filtro por 1 etiqueta;
-   T3 filtros combinados; T4 abrir conversa; T5 empacotamento/instalação) → revisão sua.
+## 8. Próximas fases
+1. ~~Fechar spec (§3)~~ — feito em 2026-11-23.
+2. Quebrar em tarefas verticais → revisão sua. Rascunho:
+   T0 copiar A v1.0.1 para `extension/` + commit; T1 gravar `data-id` (migração compatível + testes);
+   T2 barra com filtro por 1 etiqueta; T3 várias etiquetas (qualquer uma/todas) + convivência com a busca nativa;
+   T4 backup diário com rotação; T5 aviso "Restaurar backup"; T6 v1.1.0 + LEIA-ME de atualização.
 3. Implementar incrementalmente, com teste por fatia.
