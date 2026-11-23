@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Testes — Recarregar com a aba aberta</title>
+<style>.conversation__name { display: flex; }</style></head>
+<body>
+<pre id="out">rodando...</pre>
+<ul id="atendimentos_contatos"></ul>
+<script src="harness.js"></script>
+<script>
+/*
+ * Cenário do tremor (2026-11-23): o ChatClinic estava aberto, a extensão foi recarregada sem F5.
+ * O script antigo fica órfão (runtime.id some) mas continua observando a página; o novo entra.
+ * Antes da correção: a barra era removida/recolocada ~13x por segundo e ficavam 2 barras.
+ */
+(function () {
+  'use strict';
+  const { test, assert } = __harness;
+  const data = {
+    library: [{ id: 'porto', name: 'PORTO', color: '#2563EB' }],
+    assignments: { 'Ana Souza': [{ id: 'porto', at: 1 }], 'Bruno Lima': [{ id: 'porto', at: 2 }] }
+  };
+  const mk = () => ({
+    storage: {
+      local: {
+        get: (k, cb) => { const v = JSON.parse(JSON.stringify(data)); if (cb) { setTimeout(() => cb(v), 0); return undefined; } return Promise.resolve(v); },
+        set: async () => {}, remove: async () => {}
+      },
+      onChanged: { addListener() {} }
+    },
+    runtime: { id: 'ext', lastError: undefined, sendMessage: (m, cb) => cb && setTimeout(() => cb({ count: 0 }), 0) }
+  });
+  const ul = document.getElementById('atendimentos_contatos');
+  for (const name of ['Ana Souza', 'Bruno Lima', 'Sem Etiqueta']) {
+    const d = document.createElement('div');
+    d.className = 'conversation';
+    d.innerHTML = '<div class="conversation__details"><div class="conversation__name"><div class="conversation__name--title"></div><div class="conversation__time">12:00</div></div></div>';
+    d.querySelector('.conversation__name--title').textContent = name;
+    ul.appendChild(d);
+  }
+  const load = (src) => new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.body.appendChild(s); });
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const SCRIPTS = ['content.js', 'search/core.js', 'search/bar.js', 'protect/core.js', 'protect/guard.js'];
+  const loadAll = async () => { for (const f of SCRIPTS) await load('../extension/' + f); };
+
+  let moves = 0, stripMoves = 0;
+  new MutationObserver((recs) => {
+    for (const r of recs) for (const n of [...r.addedNodes, ...r.removedNodes]) {
+      if (n.nodeType !== 1) continue;
+      if (n.getAttribute('data-etq') === 'search-bar') moves++;
+      if (n.getAttribute('data-etq') === 'strip') stripMoves++;
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+  const strips = () => [...ul.querySelectorAll('[data-etq="strip"]')];
+
+  let oldApi, oldSigs;
+  test('versão antiga rodando: 1 barra e 1 faixa por cliente etiquetado', async () => {
+    oldApi = mk(); globalThis.chrome = oldApi;
+    await loadAll();
+    await sleep(800);
+    assert.equal(document.querySelectorAll('[data-etq="search-bar"]').length, 1);
+    assert.equal(strips().length, 2);
+    oldSigs = strips().map((s) => s.getAttribute('data-etq-sig'));
+  });
+
+  test('Recarregar com a aba aberta: fica 1 barra só e ela para de se mexer', async () => {
+    oldApi.runtime.id = undefined; // o script antigo vira órfão
+    globalThis.chrome = mk(); // o novo tem a sua própria API
+    await loadAll();
+    await sleep(1000); // tempo para a troca acontecer
+    const m0 = moves, s0 = stripMoves;
+    ul.querySelector('.conversation__time').textContent = '12:01'; // mexe na página, como o ChatClinic faz
+    await sleep(3000);
+    assert.equal(document.querySelectorAll('[data-etq="search-bar"]').length, 1, 'mais de uma barra');
+    assert.equal(moves - m0, 0, 'a barra continuou sendo removida/recolocada');
+    assert.equal(stripMoves - s0, 0, 'as faixas de etiquetas continuaram mudando');
+  });
+
+  test('faixas de etiquetas são refeitas pelo script novo (cliques do órfão não funcionam)', () => {
+    assert.equal(strips().length, 2, 'faixa duplicada ou sumiu');
+    const now = strips().map((s) => s.getAttribute('data-etq-sig'));
+    assert.ok(now.every((s) => !oldSigs.includes(s)), 'ficou faixa do script órfão');
+  });
+
+  setTimeout(() => __harness.run(), 0);
+})();
+</script>
+</body>
+</html>

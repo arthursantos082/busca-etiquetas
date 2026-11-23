@@ -25,6 +25,12 @@
   };
 
   const MARK = 'data-etq';
+  // Identidade desta cópia do script. Ao recarregar a extensão com o ChatClinic aberto, a cópia antiga
+  // fica "órfã" (runtime.id some) mas continuaria observando a página; as faixas dela têm cliques que
+  // não funcionam mais. A cópia nova refaz as faixas que não são dela, e a antiga para.
+  const INST = Math.random().toString(36).slice(2);
+  const RT = chrome.runtime;
+  const alive = () => { try { return !!(RT && RT.id); } catch (e) { return false; } };
   let library = [];
   let assignments = {};
   let observer = null;
@@ -175,6 +181,7 @@
 
   function render() {
     timer = null;
+    if (!alive()) { if (observer) observer.disconnect(); observer = null; return; }
     if (!document.body) return;
     const wanted = [];
     const header = findHeader();
@@ -188,7 +195,7 @@
     const keep = new Set();
     for (const w of wanted) {
       const tags = tagsFor(w.key);
-      const sig = w.kind + '|' + w.key + '|' + tags.map((x) => x.t.id + ':' + x.t.name + ':' + x.t.color).join(',');
+      const sig = INST + '|' + w.kind + '|' + w.key + '|' + tags.map((x) => x.t.id + ':' + x.t.name + ':' + x.t.color).join(',');
       const next = w.anchor.nextSibling;
       const nextIsOurs = next && next.nodeType === 1 && next.getAttribute(MARK) === 'strip';
       if (nextIsOurs && next.getAttribute('data-etq-sig') === sig) { keep.add(next); continue; }

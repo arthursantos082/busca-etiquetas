@@ -29,7 +29,7 @@
       },
       onChanged: { addListener: (fn) => listeners.push(fn) }
     },
-    runtime: { sendMessage: () => {} }
+    runtime: { id: 'teste', sendMessage: () => {} }
   };
 
   globalThis.__fx = {

@@ -53,6 +53,8 @@
 
   function showBanner(latest) {
     if (banner && banner.isConnected) return;
+    // Aviso deixado por uma cópia antiga deste script (extensão recarregada com a aba aberta).
+    document.querySelectorAll('[data-etq="restore"]').forEach((el) => el.remove());
     banner = document.createElement('div');
     banner.setAttribute('data-etq', 'restore');
     const root = banner.attachShadow({ mode: 'open' });

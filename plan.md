@@ -239,8 +239,17 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
    - [x] **T5** aviso "Restaurar backup" (`protect/guard.js` no ChatClinic + cartão no gerenciador). "Vazia" = só etiquetas
      padrão e nenhuma marcação. Sinal de uso anterior: marca no `localStorage` da página do ChatClinic (sobrevive à perda do
      storage da extensão) ou backups no histórico de downloads. "Agora não" dispensa até voltar a ter dados.
-   - [ ] **T6** v1.1.0 + LEIA-ME de atualização.
-   - [ ] **T7 (novo, pedido em 2026-11-23)** opção para **ocultar as etiquetas nativas do ChatClinic** na lista
-     (chips "Protege - Oficial", "Conhecer Seguros", "Arthur Santos"). Viável por CSS injetado + opção no gerenciador;
-     falta descobrir os seletores desses chips no DOM (estudo ao vivo, somente leitura).
+   - [x] **Correção: tremor no 1º cliente** (2026-11-23). Causa: ao clicar em "Recarregar" com o ChatClinic aberto, o
+     script antigo fica **órfão** (`runtime.id` some) mas segue observando a página; dois `bar.js` brigavam pela posição
+     da barra (~13 remoções/recolocações por segundo, 2 barras), empurrando o 1º item. Correção: script órfão se desliga
+     e remove a própria barra; o novo remove barras alheias. O `content.js` (A) tinha o mesmo problema latente (faixas do
+     órfão com cliques mortos): agora cada cópia tem identidade na assinatura da faixa e a órfã para. Teste
+     `tests/orphan.html` falha no código anterior e passa no novo.
+   - [ ] **T6** v1.1.0 + LEIA-ME de atualização. **O LEIA-ME deve mandar dar F5 no ChatClinic depois de "Recarregar".**
+   - [ ] **T7 (novo, pedido em 2026-11-23)** opção para **ocultar as etiquetas nativas do ChatClinic** na lista.
+     Seletores (estudo ao vivo, 2026-11-23), dentro de `div.conversation__details > div.departamentos-atendimento`:
+     canal "Protege - Oficial" = `span#marc-canal` (laranja); departamento "Conhecer Seguros" = `span#marc-depart:not(.marc-atendente)`
+     (amarelo); atendente "Arthur Santos" = `span#marc-depart.marc-atendente` (azul). Na mesma linha há `span#expira_tem…`
+     (não esconder a linha inteira). As bolinhas "M"/"E" são `span#tria-origem` em `.conversation__message` (fora do escopo).
+     Proposta: CSS injetado + 3 interruptores no gerenciador (canal / departamento / atendente), só neste navegador.
 3. Implementar incrementalmente, com teste por fatia.

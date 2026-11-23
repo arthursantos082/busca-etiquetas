@@ -15,6 +15,10 @@
   'use strict';
   const S = globalThis.EtqSearch;
   if (!S) return;
+  // API deste script. Quando a extensão é recarregada com o ChatClinic aberto, este script vira "órfão"
+  // (runtime.id some) mas continuaria observando a página e brigando com o script novo pela barra.
+  const api = globalThis.chrome;
+  const alive = () => { try { return !!(api && api.runtime && api.runtime.id); } catch { return false; } };
 
   const CONFIG = {
     list: 'ul#atendimentos_contatos', // lista de conversas
@@ -41,7 +45,7 @@
 
   // ---------- dados (só leitura) ----------
   function load() {
-    chrome.storage.local.get(['library', 'assignments'], (d) => {
+    api.storage.local.get(['library', 'assignments'], (d) => {
       library = Array.isArray(d.library) ? d.library : [];
       assignments = d.assignments && typeof d.assignments === 'object' ? d.assignments : {};
       selected = S.pruneSelection(selected, library);
@@ -209,19 +213,31 @@
   }
 
   function ensureBar(list) {
+    // Barras de outro script (órfão de uma versão anterior) saem; só a nossa fica.
+    document.querySelectorAll('[' + MARK + '="search-bar"]').forEach((h) => { if (!bar || h !== bar.host) h.remove(); });
     if (bar && bar.host.isConnected && bar.host.nextElementSibling === list) return;
     if (bar) bar.host.remove();
     const host = document.createElement('div');
     host.setAttribute(MARK, 'search-bar');
     const root = host.attachShadow({ mode: 'open' });
     list.before(host);
-    bar = { host, root, sig: null };
+    bar = { host, root, sig: null, ro: null };
     // A largura da coluna muda (janela, zoom): recalcula quantas etiquetas cabem.
-    if (typeof ResizeObserver === 'function') new ResizeObserver(updateMore).observe(host);
+    if (typeof ResizeObserver === 'function') { bar.ro = new ResizeObserver(updateMore); bar.ro.observe(host); }
+  }
+
+  // Script órfão: para de observar e tira a própria barra (o script novo desenha a dele).
+  function teardown() {
+    if (observer) observer.disconnect();
+    observer = null;
+    clearTimeout(timer);
+    window.removeEventListener('resize', updateMore);
+    if (bar) { if (bar.ro) bar.ro.disconnect(); bar.host.remove(); bar = null; }
   }
 
   function render() {
     timer = null;
+    if (!alive()) { teardown(); return; }
     const list = document.querySelector(CONFIG.list);
     if (!list) return;
     ensureStyle();
@@ -239,14 +255,14 @@
   }
 
   function schedule() {
-    if (timer) return;
+    if (timer || !observer) return;
     timer = setTimeout(render, 150);
   }
 
   // ---------- início ----------
   function start() {
     load();
-    chrome.storage.onChanged.addListener((changes, area) => {
+    api.storage.onChanged.addListener((changes, area) => {
       if (area === 'local' && (changes.library || changes.assignments)) load();
     });
     // childList pega itens novos, troca de aba e paginação; characterData pega nome alterado.

@@ -40,6 +40,7 @@
       onChanged: { addListener: (fn) => listeners.push(fn) }
     },
     runtime: {
+      id: 'teste',
       lastError: undefined,
       sendMessage: (msg, cb) => {
         sent.push(msg.type);
