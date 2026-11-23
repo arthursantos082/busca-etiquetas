@@ -1,8 +1,8 @@
 # plan.md — Busca por Etiquetas (ChatClinic)
 
 > Documento vivo. Segue o fluxo *spec-driven* (Especificar → Planejar → Tarefas → Implementar),
-> com uma porta de revisão humana entre cada fase. **Fase atual: PLANEJAR.** A spec foi fechada no grill-me de 2026-11-23
-> (ver §3 e §7). Próximo passo: quebrar em tarefas (§8) e passar pela sua revisão.
+> com uma porta de revisão humana entre cada fase. **Fase atual: IMPLEMENTAR** (iniciada em 2026-11-23).
+> A spec foi fechada no grill-me de 2026-11-23 (ver §3 e §7). Andamento das tarefas em §8.
 
 ---
 
@@ -153,9 +153,11 @@ busca-etiquetas/
 ```
 O código instalado (`Downloads/etiquetas-chatclinic/`) **só muda quando você copiar os arquivos para lá.**
 
-### 3.2 Comandos (previstos)
+### 3.2 Comandos
 ```
-Testes:   node --test tests/      (Node ainda não está instalado nesta máquina; Python 3.15 está)
+Testes:   powershell -ExecutionPolicy Bypass -File tests\run.ps1
+          (roda tests/run.html no Chrome headless; não precisa de Node. Testes de lógica pura também
+           rodam com `node --test tests/` se o Node for instalado; os de DOM só no navegador.)
 Instalar: Exportar → copiar extension/* por cima de Downloads/etiquetas-chatclinic/ → chrome://extensions → Recarregar → conferir
 ```
 
@@ -216,8 +218,17 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
 
 ## 8. Próximas fases
 1. ~~Fechar spec (§3)~~ — feito em 2026-11-23.
-2. Quebrar em tarefas verticais → revisão sua. Rascunho:
-   T0 copiar A v1.0.1 para `extension/` + commit; T1 gravar `data-id` (migração compatível + testes);
-   T2 barra com filtro por 1 etiqueta; T3 várias etiquetas (qualquer uma/todas) + convivência com a busca nativa;
-   T4 backup diário com rotação; T5 aviso "Restaurar backup"; T6 v1.1.0 + LEIA-ME de atualização.
+2. Tarefas verticais:
+   - [x] **T0** copiar A v1.0.1 para `extension/` + commit (`a5d898f`).
+   - [x] **T2 + T3** barra de filtro (`extension/search/core.js` = lógica pura; `search/bar.js` = DOM): 1 ou mais etiquetas,
+     "qualquer uma"/"todas", "limpar", itens novos via MutationObserver, lista recriada, convivência com a busca nativa
+     (classe `etq-search-hide` com `!important`), só leitura. 20 testes (lógica + DOM sobre réplica da lista).
+     **Falta verificar ao vivo no ChatClinic:** posição da barra (hoje antes de `ul#atendimentos_contatos`; ajuste em
+     `CONFIG`), se `.conversation__name--title` dá o nome exato que A usa como chave, e se as abas Atendimento/Espera
+     coexistem no DOM.
+     Extra fora da spec, para sua revisão: aviso "Nenhuma conversa carregada na lista tem essa etiqueta" quando o filtro
+     zera a lista (evita achar que quebrou, por causa de D5).
+   - [ ] **T1** gravar `data-id` (migração compatível + testes). Depende de saber, ao vivo, onde está o `data-id` da conversa
+     **aberta** (o cabeçalho que A usa não tem o atributo; candidato: item ativo na lista).
+   - [ ] **T4** backup diário com rotação. [ ] **T5** aviso "Restaurar backup". [ ] **T6** v1.1.0 + LEIA-ME de atualização.
 3. Implementar incrementalmente, com teste por fatia.

@@ -30,7 +30,9 @@
         "https://app.chatclinic.com.br/*"
       ],
       "js": [
-        "content.js"
+        "content.js",
+        "search/core.js",
+        "search/bar.js"
       ],
       "all_frames": true,
       "run_at": "document_idle"
