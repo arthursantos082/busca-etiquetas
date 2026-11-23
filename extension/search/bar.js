@@ -259,6 +259,18 @@
     timer = setTimeout(render, 150);
   }
 
+  // O ChatClinic recria a lista inteira quando chega mensagem. Filtrar na hora (antes da tela ser
+  // pintada) evita que, com filtro ativo, a lista toda apareça por um instante. Custo: ~1 ms.
+  const isItem = (n) => n.nodeType === 1 && (n.matches(CONFIG.item) || !!n.querySelector(CONFIG.item));
+  function onMutations(recs) {
+    for (const r of recs) {
+      for (const n of r.addedNodes) {
+        if (isItem(n)) { clearTimeout(timer); render(); return; }
+      }
+    }
+    schedule();
+  }
+
   // ---------- início ----------
   function start() {
     load();
@@ -266,7 +278,7 @@
       if (area === 'local' && (changes.library || changes.assignments)) load();
     });
     // childList pega itens novos, troca de aba e paginação; characterData pega nome alterado.
-    observer = new MutationObserver(schedule);
+    observer = new MutationObserver(onMutations);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     window.addEventListener('resize', updateMore);
   }

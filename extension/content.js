@@ -21,7 +21,10 @@
     // Até quantos níveis subir a partir do "PROTOCOLO" procurando o nome.
     headerMaxDepth: 6,
     // A lista de conversas fica na parte esquerda da tela (fração da largura).
-    listMaxLeft: 0.5
+    listMaxLeft: 0.5,
+    // Item da lista de conversas. Quando o ChatClinic recria a lista (chega mensagem), as faixas
+    // de etiquetas somem junto; redesenhar na hora evita que pisquem.
+    listItem: '.conversation'
   };
 
   const MARK = 'data-etq';
@@ -214,6 +217,19 @@
     timer = setTimeout(render, 200);
   }
 
+  // Itens novos na lista => redesenha já (o observador roda antes da tela ser pintada; custa ~20 ms,
+  // uma vez por troca). Outras mudanças (digitação, chat) continuam esperando 200 ms.
+  const isListItem = (n) => n.nodeType === 1 && !isOurs(n) &&
+    (n.matches(CONFIG.listItem) || !!n.querySelector(CONFIG.listItem));
+  function onMutations(recs) {
+    for (const r of recs) {
+      for (const n of r.addedNodes) {
+        if (isListItem(n)) { clearTimeout(timer); render(); return; }
+      }
+    }
+    schedule();
+  }
+
   // ---------- caixinha para marcar etiquetas ----------
   const POP_CSS = `
     :host { all: initial; }
@@ -336,7 +352,7 @@
   function start() {
     load();
     chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local') load(); });
-    observer = new MutationObserver(schedule);
+    observer = new MutationObserver(onMutations);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     window.addEventListener('resize', schedule);
   }

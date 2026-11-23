@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Testes — Lista refeita pelo ChatClinic</title>
+<style>.conversation__name { display: flex; }</style></head>
+<body>
+<pre id="out">rodando...</pre>
+<ul id="atendimentos_contatos"></ul>
+<script src="harness.js"></script>
+<script>
+/*
+ * Cenário do pisca-pisca (2026-11-23, medido ao vivo): quando chega mensagem, o ChatClinic remove e
+ * recria TODOS os itens da lista de uma vez. As etiquetas sumiam por ~360 ms (espera de 200 ms do
+ * content.js) e, com filtro ativo, a lista inteira aparecia por ~150 ms antes de esconder de novo.
+ * Agora: itens novos na lista => redesenha antes da tela ser pintada.
+ */
+(function () {
+  'use strict';
+  const listeners = [];
+  globalThis.chrome = {
+    storage: {
+      local: {
+        get: (k, cb) => {
+          const v = {
+            library: [{ id: 'porto', name: 'PORTO', color: '#2563EB' }, { id: 'tokio', name: 'TOKIO', color: '#DC2626' }],
+            assignments: { 'Ana Souza': [{ id: 'porto', at: 1 }], 'Bruno Lima': [{ id: 'tokio', at: 2 }] }
+          };
+          if (cb) { setTimeout(() => cb(v), 0); return undefined; }
+          return Promise.resolve(v);
+        },
+        set: async () => {}, remove: async () => {}
+      },
+      onChanged: { addListener: (f) => listeners.push(f) }
+    },
+    runtime: { id: 'teste', lastError: undefined, sendMessage: (m, cb) => cb && setTimeout(() => cb({ count: 0 }), 0) }
+  };
+  const ul = document.getElementById('atendimentos_contatos');
+  const NAMES = ['Ana Souza', 'Bruno Lima', 'Carla Dias'];
+  const item = (name) => {
+    const d = document.createElement('div');
+    d.className = 'conversation';
+    d.innerHTML = '<div class="conversation__details"><div class="conversation__name"><div class="conversation__name--title"></div><div class="conversation__time">12:00</div></div></div>';
+    d.querySelector('.conversation__name--title').textContent = name;
+    return d;
+  };
+  NAMES.forEach((n) => ul.appendChild(item(n)));
+  // Igual ao ChatClinic: tudo some e volta na mesma tarefa (ex.: $('#atendimentos_contatos').html(...)).
+  globalThis.refreshList = () => { ul.textContent = ''; NAMES.forEach((n) => ul.appendChild(item(n))); };
+})();
+</script>
+<script src="../extension/content.js"></script>
+<script src="../extension/search/core.js"></script>
+<script src="../extension/search/bar.js"></script>
+<script>
+(function () {
+  const { test, assert } = __harness;
+  const ul = document.getElementById('atendimentos_contatos');
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const stripped = () => [...ul.querySelectorAll('.conversation')].filter((c) => c.querySelector('[data-etq="strip"]')).length;
+  const visible = () => [...ul.querySelectorAll('.conversation')].filter((c) => getComputedStyle(c).display !== 'none').length;
+  // Uma tarefa depois da troca: o MutationObserver já rodou, mas nenhum temporizador de 150/200 ms ainda.
+  const afterRefresh = () => new Promise((r) => setTimeout(() => { refreshList(); setTimeout(r, 0); }, 0));
+
+  test('antes: 2 clientes etiquetados com faixa', async () => {
+    await sleep(600);
+    assert.equal(stripped(), 2);
+  });
+
+  test('lista refeita: as etiquetas já estão lá antes da tela ser pintada', async () => {
+    await afterRefresh();
+    assert.equal(stripped(), 2, 'etiquetas sumiram (pisca-pisca)');
+  });
+
+  test('com filtro ativo, lista refeita não mostra quem está filtrado nem por um instante', async () => {
+    document.querySelector('[data-etq="search-bar"]').shadowRoot.querySelector('button.tag[data-id="porto"]').click();
+    await sleep(400);
+    assert.equal(visible(), 1);
+    await afterRefresh();
+    assert.equal(visible(), 1, 'a lista inteira apareceu antes de filtrar');
+    assert.equal(stripped(), 2);
+  });
+
+  test('várias trocas seguidas continuam estáveis', async () => {
+    for (let i = 0; i < 5; i++) await afterRefresh();
+    assert.equal(visible(), 1);
+    assert.equal(stripped(), 2);
+    await sleep(500);
+    assert.equal(document.querySelectorAll('[data-etq="search-bar"]').length, 1);
+  });
+
+  setTimeout(() => __harness.run(), 0);
+})();
+</script>
+</body>
+</html>
