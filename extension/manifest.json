@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Etiquetas ChatClinic",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Adicione suas próprias etiquetas às conversas do ChatClinic. Desenvolvido por Gleidston Santos.",
   "permissions": [
     "storage",

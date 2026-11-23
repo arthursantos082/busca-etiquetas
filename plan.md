@@ -1,7 +1,7 @@
 # plan.md — Busca por Etiquetas (ChatClinic)
 
 > Documento vivo. Segue o fluxo *spec-driven* (Especificar → Planejar → Tarefas → Implementar),
-> com uma porta de revisão humana entre cada fase. **Fase atual: IMPLEMENTAR** (iniciada em 2026-11-23).
+> com uma porta de revisão humana entre cada fase. **Fase atual: DISTRIBUIR** — v1.1.0 fechada em 2026-11-23 (instalada e conferida nesta máquina).
 > A spec foi fechada no grill-me de 2026-11-23 (ver §3 e §7). Andamento das tarefas em §8.
 
 ---
@@ -215,6 +215,9 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
 | D9 | **Backup automático** 1x/dia em Downloads, guardando os últimos 7 (permissão `downloads`). | 2026-11-23 |
 | D10 | Aviso **"Restaurar backup"** quando A abrir vazia depois de já ter sido usada. | 2026-11-23 |
 | D11 | Código de A **versionado neste repositório** (`extension/`). A pasta instalada só muda por cópia manual. | 2026-11-23 |
+| D12 | **T1 descartado:** o filtro pelo nome já atende; não gravar `data-id`. R3/R6 seguem como limitação conhecida. | 2026-11-23 |
+| D13 | Backups em `Downloads/etiquetas-chatclinic-backups/` (não na pasta da extensão). | 2026-11-23 |
+| D14 | **T7:** ocultar chips nativos (canal/departamento/atendente) por interruptor, só CSS, por atendente. | 2026-11-23 |
 
 ---
 
@@ -230,7 +233,7 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
      coexistem no DOM.
      Extra fora da spec, para sua revisão: aviso "Nenhuma conversa carregada na lista tem essa etiqueta" quando o filtro
      zera a lista (evita achar que quebrou, por causa de D5).
-   - [ ] **T1** gravar `data-id` (migração compatível + testes). Depende de saber, ao vivo, onde está o `data-id` da conversa
+   - [~] **T1 — descartado (D12).** ~~gravar `data-id` (migração compatível + testes).~~ Depende de saber, ao vivo, onde está o `data-id` da conversa
      **aberta** (o cabeçalho que A usa não tem o atributo; candidato: item ativo na lista).
    - [x] **Barra compacta** (`991ba95`): uma linha + "+N", texto escuro nas não escolhidas. Conferida ao vivo.
    - [x] **T4** backup diário (`background.js` + `protect/core.js`, permissão `downloads`): 1x/dia ao abrir o ChatClinic,
@@ -245,7 +248,9 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
      e remove a própria barra; o novo remove barras alheias. O `content.js` (A) tinha o mesmo problema latente (faixas do
      órfão com cliques mortos): agora cada cópia tem identidade na assinatura da faixa e a órfã para. Teste
      `tests/orphan.html` falha no código anterior e passa no novo.
-   - [ ] **T6** v1.1.0 + LEIA-ME de atualização. **O LEIA-ME deve mandar dar F5 no ChatClinic depois de "Recarregar".**
+   - [x] **T6** v1.1.0: `manifest.json` 1.1.0; `extension/LEIA-ME.txt` reescrito (ATUALIZAR na mesma pasta com Exportar antes,
+     Recarregar + F5; INSTALAR; COMO USAR; backup automático). Pacote: `dist/etiquetas-chatclinic-v1.1.0.zip`
+     (fora do git; pasta `etiquetas-chatclinic/` dentro).
    - [x] **T7 (pedido em 2026-11-23)** opção para **ocultar as etiquetas nativas do ChatClinic** na lista.
      Seletores (estudo ao vivo, 2026-11-23), dentro de `div.conversation__details > div.departamentos-atendimento`:
      canal "Protege - Oficial" = `span#marc-canal` (laranja); departamento "Conhecer Seguros" = `span#marc-depart:not(.marc-atendente)`

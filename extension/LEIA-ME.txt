@@ -1,10 +1,52 @@
-ETIQUETAS CHATCLINIC — como instalar
-====================================
-Desenvolvido por Gleidston Santos
+ETIQUETAS CHATCLINIC — versão 1.1.0
+===================================
+Desenvolvido por Gleidston Santos. Versão 1.1.0 com busca por etiquetas.
 
-1. Descompacte o arquivo .zip (botão direito > Extrair tudo).
-   Guarde a pasta "etiquetas-chatclinic" num lugar fixo (ex.: Documentos).
-   Não apague a pasta depois: o Chrome usa ela.
+Escolha o seu caso:
+  A) Este computador JÁ TEM a extensão (versão 1.0.1)  -> veja "ATUALIZAR"
+  B) Este computador NÃO TEM a extensão                 -> veja "INSTALAR"
+
+
+ATUALIZAR (já tem a versão 1.0.1)
+---------------------------------
+IMPORTANTE: as etiquetas ficam presas à PASTA da extensão. Se você remover a
+extensão ou carregar uma pasta diferente, elas somem. Por isso a atualização
+é feita trocando os arquivos DENTRO da mesma pasta.
+
+1. Faça uma cópia de segurança antes:
+   clique no ícone roxo da extensão > "Exportar".
+   O arquivo vai para a pasta Downloads (etiquetas-chatclinic-AAAA-MM-DD.json).
+
+2. Descubra onde a extensão está instalada:
+   abra  chrome://extensions , procure "Etiquetas ChatClinic", clique em
+   "Detalhes" e veja a linha "Carregado de:" (ex.: C:\Users\...\Downloads\
+   etiquetas-chatclinic). Abra essa pasta no Explorador de Arquivos.
+
+3. Abra o .zip da versão 1.1.0 (dois cliques) e entre na pasta
+   "etiquetas-chatclinic" de dentro dele.
+
+4. Selecione TUDO o que está dentro dela (Ctrl+A), copie (Ctrl+C) e cole
+   (Ctrl+V) DENTRO da pasta do passo 2. Quando o Windows perguntar,
+   escolha "Substituir os arquivos no destino".
+
+5. Volte a  chrome://extensions  e clique no botão de RECARREGAR (a setinha
+   redonda) no cartão "Etiquetas ChatClinic". O cartão deve mostrar 1.1.0.
+   NÃO clique em "Remover". NÃO use "Carregar sem compactação" de novo.
+
+6. Vá até a aba do ChatClinic e aperte F5 (recarregar a página).
+
+7. Confira:
+   - acima da lista de conversas aparece a barra "🏷 Filtrar:";
+   - as etiquetas que você já tinha continuam nas conversas.
+   Se as etiquetas sumiram: ícone roxo > "Importar" > escolha o arquivo do
+   passo 1.
+
+
+INSTALAR (computador novo)
+--------------------------
+1. Extraia o .zip (botão direito > Extrair tudo) para um lugar fixo, por
+   exemplo a pasta Documentos. Vai aparecer a pasta "etiquetas-chatclinic".
+   Não apague nem mude essa pasta de lugar depois: o Chrome usa ela.
 
 2. No Chrome, abra o endereço:  chrome://extensions
 
@@ -15,18 +57,44 @@ Desenvolvido por Gleidston Santos
 5. Clique no ícone de quebra-cabeça do Chrome e fixe "Etiquetas ChatClinic"
    (o ícone roxo de etiqueta).
 
-6. Recarregue a aba do ChatClinic (F5).
+6. Abra ou recarregue (F5) a aba do ChatClinic.
+
+7. Para trazer as etiquetas de outro computador: lá, ícone roxo > "Exportar";
+   aqui, ícone roxo > "Importar" e escolha o arquivo.
 
 
 COMO USAR
 ---------
-- Abra uma conversa no ChatClinic. Ao lado do nome, no topo, aparece o botão
-  "🏷 Etiquetas". Clique e marque as etiquetas que quiser.
-- As etiquetas marcadas aparecem também na lista de conversas, abaixo do nome.
+Marcar etiquetas
+- Abra uma conversa. Ao lado do nome, no topo, clique em "🏷 Etiquetas" e marque
+  as que quiser. Elas aparecem também na lista de conversas.
 - Clicar numa etiqueta abre a caixinha para marcar/desmarcar.
-- Para criar, renomear, trocar a cor ou excluir etiquetas: clique no ícone roxo
-  da extensão no Chrome.
-- Passe o mouse sobre uma etiqueta para ver quando ela foi marcada.
+- Para criar, renomear, trocar a cor ou excluir etiquetas: ícone roxo.
+
+Filtrar a lista por etiqueta (novo)
+- Na barra "🏷 Filtrar:" acima da lista, clique numa etiqueta: a lista mostra
+  só as conversas com ela. Clique de novo para desmarcar.
+- "+N" mostra as etiquetas que não couberam na linha.
+- Com 2 ou mais escolhidas, o botão "qualquer uma" / "todas" troca o modo:
+  "qualquer uma" mostra quem tem pelo menos uma; "todas" só quem tem todas.
+- "limpar" mostra a lista inteira de novo.
+- O filtro só olha as conversas já carregadas na lista. Ao recarregar a
+  página, ele recomeça sem filtro.
+
+Esconder as etiquetas do próprio ChatClinic (novo)
+- Ícone roxo > cartão "Etiquetas do ChatClinic": marque para esconder o canal,
+  o departamento e/ou o atendente que aparecem em cada conversa da lista.
+  Desmarque para ver de novo. Vale só para você.
+
+
+CÓPIA DE SEGURANÇA AUTOMÁTICA (novo)
+------------------------------------
+- Uma vez por dia, ao abrir o ChatClinic, a extensão salva uma cópia das suas
+  etiquetas em  Downloads\etiquetas-chatclinic-backups\backup-AAAA-MM-DD.json
+  e guarda os últimos 7 dias. O Chrome mostra esse download: é normal.
+- Se um dia as etiquetas sumirem, aparece um aviso vermelho "Restaurar backup".
+  Clique nele e escolha o arquivo mais recente daquela pasta.
+- Os arquivos têm nomes de clientes: não envie nem compartilhe.
 
 
 IMPORTANTE
@@ -34,6 +102,4 @@ IMPORTANTE
 - As etiquetas ficam salvas só neste navegador. Ninguém mais vê.
 - Elas são guardadas pelo NOME do contato. Dois contatos com o mesmo nome
   exato vão compartilhar as etiquetas.
-- Use "Exportar" de vez em quando para ter uma cópia de segurança.
-- Para instalar em outro computador, repita os passos acima. Se quiser levar
-  as etiquetas junto, use Exportar aqui e Importar lá.
+- Sempre que clicar em RECARREGAR a extensão, aperte F5 no ChatClinic depois.
