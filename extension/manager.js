@@ -33,6 +33,36 @@ async function load() {
   assignments = d.assignments && typeof d.assignments === 'object' ? d.assignments : {};
   render();
   renderProtection();
+  renderNative();
+}
+
+// ---------- ocultar etiquetas nativas do ChatClinic ----------
+async function renderNative() {
+  const N = window.EtqNative;
+  if (!N) return;
+  const cur = N.normalize((await chrome.storage.local.get('hideNative')).hideNative);
+  const box = $('native');
+  box.textContent = '';
+  for (const k of N.KINDS) {
+    const row = document.createElement('label');
+    row.className = 'tg';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = cur[k.key];
+    cb.addEventListener('change', async () => {
+      const next = N.normalize((await chrome.storage.local.get('hideNative')).hideNative);
+      next[k.key] = cb.checked;
+      await chrome.storage.local.set({ hideNative: next });
+      toast(cb.checked ? `${k.label} oculto no ChatClinic` : `${k.label} visível de novo`);
+    });
+    const txt = document.createElement('span');
+    txt.textContent = 'Ocultar ' + k.label.toLowerCase();
+    const ex = document.createElement('span');
+    ex.className = 'ex';
+    ex.textContent = '(ex.: ' + k.example + ')';
+    row.append(cb, txt, ex);
+    box.appendChild(row);
+  }
 }
 
 // ---------- backup automático e aviso de restauração ----------

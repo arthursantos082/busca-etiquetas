@@ -49,6 +49,9 @@
   .credit b { color: #6b7280; }
   .toast { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
   .toast.show { opacity: 1; }
+  .tg { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; cursor: pointer; }
+  .tg input { width: 16px; height: 16px; accent-color: #7c3aed; margin: 0; cursor: pointer; }
+  .tg .ex { color: #9ca3af; font-size: 12px; }
   .restore { border: 2px solid #dc2626; }
   .rp { margin: 0 0 6px; font-size: 13px; }
   .rf { margin: 0 0 10px; font-size: 11px; color: #6b7280; word-break: break-all; }
@@ -95,6 +98,12 @@
   </div>
 
   <div class="card">
+    <h2>Etiquetas do ChatClinic</h2>
+    <div id="native"></div>
+    <div class="small">Esconde da lista de conversas as etiquetas que o próprio ChatClinic mostra. Só neste navegador; desmarque para ver de novo.</div>
+  </div>
+
+  <div class="card">
     <h2>Cópia de segurança</h2>
     <div class="backup">
       <button class="ghost" id="export">⬇ Exportar</button>
@@ -108,6 +117,7 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="protect/core.js"></script>
+<script src="native/core.js"></script>
 <script src="manager.js"></script>
 </body>
 </html>

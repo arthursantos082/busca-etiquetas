@@ -35,7 +35,9 @@
         "search/core.js",
         "search/bar.js",
         "protect/core.js",
-        "protect/guard.js"
+        "protect/guard.js",
+        "native/core.js",
+        "native/hide.js"
       ],
       "all_frames": true,
       "run_at": "document_idle"

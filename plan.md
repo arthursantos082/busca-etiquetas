@@ -246,10 +246,12 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
      órfão com cliques mortos): agora cada cópia tem identidade na assinatura da faixa e a órfã para. Teste
      `tests/orphan.html` falha no código anterior e passa no novo.
    - [ ] **T6** v1.1.0 + LEIA-ME de atualização. **O LEIA-ME deve mandar dar F5 no ChatClinic depois de "Recarregar".**
-   - [ ] **T7 (novo, pedido em 2026-11-23)** opção para **ocultar as etiquetas nativas do ChatClinic** na lista.
+   - [x] **T7 (pedido em 2026-11-23)** opção para **ocultar as etiquetas nativas do ChatClinic** na lista.
      Seletores (estudo ao vivo, 2026-11-23), dentro de `div.conversation__details > div.departamentos-atendimento`:
      canal "Protege - Oficial" = `span#marc-canal` (laranja); departamento "Conhecer Seguros" = `span#marc-depart:not(.marc-atendente)`
      (amarelo); atendente "Arthur Santos" = `span#marc-depart.marc-atendente` (azul). Na mesma linha há `span#expira_tem…`
      (não esconder a linha inteira). As bolinhas "M"/"E" são `span#tria-origem` em `.conversation__message` (fora do escopo).
-     Proposta: CSS injetado + 3 interruptores no gerenciador (canal / departamento / atendente), só neste navegador.
+     Feito: `native/core.js` (gera o CSS) + `native/hide.js` (aplica na página) + cartão "Etiquetas do ChatClinic" no
+     gerenciador com 3 interruptores, guardados em `hideNative` no storage. Só CSS, só dentro de `#atendimentos_contatos`,
+     nunca a linha inteira. Testes em `tests/native.html`.
 3. Implementar incrementalmente, com teste por fatia.

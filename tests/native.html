@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Testes — Ocultar etiquetas nativas</title>
+<style>.badge { display: block; } .departamentos-atendimento { display: flex; }</style></head>
+<body>
+<pre id="out">rodando...</pre>
+<ul id="atendimentos_contatos">
+  <div class="conversation"><div class="conversation__details">
+    <div class="departamentos-atendimento">
+      <span id="marc-canal" class="badge badge-primary badge-rounded">Canal X</span>
+      <span id="marc-depart" class="badge badge-primary badge-rounded">Depto Y</span>
+      <span id="marc-depart" class="badge badge-primary badge-rounded marc-atendente">Atendente Z</span>
+      <span id="expira_tempo" class="badge">23h</span>
+    </div>
+  </div></div>
+</ul>
+<!-- Mesmos ids fora da lista (ex.: cabeçalho do chat): não podem ser afetados -->
+<div class="departamentos-atendimento" id="fora"><span id="marc-canal" class="badge">Fora</span></div>
+<script src="harness.js"></script>
+<script>
+  const listeners = [];
+  const data = {};
+  globalThis.chrome = {
+    storage: { local: {
+      get: (k, cb) => { const v = JSON.parse(JSON.stringify(data)); setTimeout(() => cb(v), 0); },
+      set: (p) => { const ch = {}; for (const k of Object.keys(p)) { ch[k] = { newValue: p[k] }; data[k] = p[k]; } setTimeout(() => listeners.forEach((f) => f(ch, 'local')), 0); }
+    }, onChanged: { addListener: (f) => listeners.push(f) } },
+    runtime: { id: 'teste' }
+  };
+</script>
+<script src="../extension/native/core.js"></script>
+<script src="../extension/native/hide.js"></script>
+<script src="native.test.js"></script>
+<script>
+(function () {
+  const { test, assert } = __harness;
+  const list = document.getElementById('atendimentos_contatos');
+  const vis = (sel) => getComputedStyle(list.querySelector(sel)).display !== 'none';
+  const wait = (ms = 50) => new Promise((r) => setTimeout(r, ms));
+
+  test('sem configuração: tudo visível e nenhum <style> injetado', async () => {
+    await wait();
+    assert.ok(vis('#marc-canal') && vis('#marc-depart:not(.marc-atendente)') && vis('.marc-atendente'));
+    assert.ok(!document.querySelector('style[data-etq="native-style"]'));
+  });
+
+  test('ocultar atendente esconde só o chip do atendente', async () => {
+    chrome.storage.local.set({ hideNative: { atendente: true } });
+    await wait();
+    assert.ok(!vis('.marc-atendente'), 'atendente continua visível');
+    assert.ok(vis('#marc-canal') && vis('#marc-depart:not(.marc-atendente)'), 'escondeu chip demais');
+  });
+
+  test('os três ocultos: contador de expiração e itens fora da lista continuam', async () => {
+    chrome.storage.local.set({ hideNative: { canal: true, depart: true, atendente: true } });
+    await wait();
+    assert.ok(!vis('#marc-canal') && !vis('#marc-depart:not(.marc-atendente)') && !vis('.marc-atendente'));
+    assert.ok(vis('#expira_tempo'), 'contador de expiração sumiu');
+    assert.ok(getComputedStyle(document.querySelector('#fora #marc-canal')).display !== 'none', 'afetou fora da lista');
+  });
+
+  test('cópia nova do script (Recarregar sem F5) não duplica o <style>', async () => {
+    await new Promise((ok) => { const s = document.createElement('script'); s.src = '../extension/native/hide.js'; s.onload = ok; document.body.appendChild(s); });
+    await wait();
+    assert.equal(document.querySelectorAll('style[data-etq="native-style"]').length, 1);
+  });
+
+  test('desligar tudo mostra de novo e remove o <style>', async () => {
+    chrome.storage.local.set({ hideNative: { canal: false, depart: false, atendente: false } });
+    await wait();
+    assert.ok(vis('#marc-canal') && vis('#marc-depart:not(.marc-atendente)') && vis('.marc-atendente'));
+    assert.equal(document.querySelectorAll('style[data-etq="native-style"]').length, 0);
+  });
+
+  setTimeout(() => __harness.run(), 0);
+})();
+</script>
+</body>
+</html>

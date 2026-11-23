@@ -10,7 +10,7 @@ if (-not $chrome) { Write-Error 'Chrome não encontrado.' }
 
 $profile = Join-Path $env:TEMP 'etq-tests-profile'
 $failed = $false
-foreach ($name in @('run.html', 'guard.html', 'orphan.html')) {
+foreach ($name in @('run.html', 'guard.html', 'orphan.html', 'native.html')) {
   $page = (Resolve-Path (Join-Path $PSScriptRoot $name)).Path
   $url = 'file:///' + ($page -replace '\\', '/')
   # O Chrome escreve avisos no stderr; no PowerShell 5.1 isso viraria erro fatal com 'Stop'.
