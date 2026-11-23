@@ -131,7 +131,9 @@ em nenhuma opção que funcione no dia a dia. Por isso a separação só traria 
 
 **Proteção contra perda de etiquetas** (nova permissão: `downloads`)
 - **Backup automático:** na primeira abertura do ChatClinic no dia, A salva
-  `Downloads/etiquetas-chatclinic/backup-AAAA-MM-DD.json` e mantém só os últimos 7.
+  `Downloads/etiquetas-chatclinic-backups/backup-AAAA-MM-DD.json` e mantém só os últimos 7.
+  (Mudado de `Downloads/etiquetas-chatclinic/`, que é a **pasta onde a extensão está instalada**: backups e código
+  ficariam misturados e apagar a pasta levaria os dois. Não faz backup de dados vazios.)
 - **Restaurar:** se A abrir vazia depois de já ter sido usada, aparece um aviso no popup e no ChatClinic com o botão
   "Restaurar backup", que abre a janela para escolher o arquivo.
 
@@ -230,5 +232,15 @@ Todas fechadas no grill-me de 2026-11-23 (ver §7). Nenhuma pendente.
      zera a lista (evita achar que quebrou, por causa de D5).
    - [ ] **T1** gravar `data-id` (migração compatível + testes). Depende de saber, ao vivo, onde está o `data-id` da conversa
      **aberta** (o cabeçalho que A usa não tem o atributo; candidato: item ativo na lista).
-   - [ ] **T4** backup diário com rotação. [ ] **T5** aviso "Restaurar backup". [ ] **T6** v1.1.0 + LEIA-ME de atualização.
+   - [x] **Barra compacta** (`991ba95`): uma linha + "+N", texto escuro nas não escolhidas. Conferida ao vivo.
+   - [x] **T4** backup diário (`background.js` + `protect/core.js`, permissão `downloads`): 1x/dia ao abrir o ChatClinic,
+     nunca de dados vazios, rotação de 7 dias pelo histórico de downloads (repetidas do mesmo dia só saem do histórico,
+     para não apagar o arquivo novo pelo caminho igual).
+   - [x] **T5** aviso "Restaurar backup" (`protect/guard.js` no ChatClinic + cartão no gerenciador). "Vazia" = só etiquetas
+     padrão e nenhuma marcação. Sinal de uso anterior: marca no `localStorage` da página do ChatClinic (sobrevive à perda do
+     storage da extensão) ou backups no histórico de downloads. "Agora não" dispensa até voltar a ter dados.
+   - [ ] **T6** v1.1.0 + LEIA-ME de atualização.
+   - [ ] **T7 (novo, pedido em 2026-11-23)** opção para **ocultar as etiquetas nativas do ChatClinic** na lista
+     (chips "Protege - Oficial", "Conhecer Seguros", "Arthur Santos"). Viável por CSS injetado + opção no gerenciador;
+     falta descobrir os seletores desses chips no DOM (estudo ao vivo, somente leitura).
 3. Implementar incrementalmente, com teste por fatia.

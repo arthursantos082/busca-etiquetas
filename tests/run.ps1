@@ -8,17 +8,21 @@ $chrome = @(
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $chrome) { Write-Error 'Chrome não encontrado.' }
 
-$page = (Resolve-Path (Join-Path $PSScriptRoot 'run.html')).Path
-$url = 'file:///' + ($page -replace '\\', '/')
 $profile = Join-Path $env:TEMP 'etq-tests-profile'
+$failed = $false
+foreach ($name in @('run.html', 'guard.html')) {
+  $page = (Resolve-Path (Join-Path $PSScriptRoot $name)).Path
+  $url = 'file:///' + ($page -replace '\\', '/')
+  # O Chrome escreve avisos no stderr; no PowerShell 5.1 isso viraria erro fatal com 'Stop'.
+  $ErrorActionPreference = 'Continue'
+  $html = & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$profile" `
+    --allow-file-access-from-files --virtual-time-budget=20000 --dump-dom $url 2>$null | Out-String
+  $ErrorActionPreference = 'Stop'
 
-# O Chrome escreve avisos no stderr; no PowerShell 5.1 isso viraria erro fatal com 'Stop'.
-$ErrorActionPreference = 'Continue'
-$html = & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$profile" `
-  --allow-file-access-from-files --virtual-time-budget=20000 --dump-dom $url 2>$null | Out-String
-$ErrorActionPreference = 'Stop'
-
-if ($html -notmatch '(?s)<pre id="out">(.*?)</pre>') { Write-Error 'Não consegui ler o resultado dos testes.' }
-$out = [System.Net.WebUtility]::HtmlDecode($Matches[1])
-Write-Output $out
-if ($out -notmatch 'RESULTADO: OK') { exit 1 }
+  Write-Output "== $name"
+  if ($html -notmatch '(?s)<pre id="out">(.*?)</pre>') { Write-Output 'Não consegui ler o resultado.'; $failed = $true; continue }
+  $out = [System.Net.WebUtility]::HtmlDecode($Matches[1])
+  Write-Output $out
+  if ($out -notmatch 'RESULTADO: OK') { $failed = $true }
+}
+if ($failed) { exit 1 }

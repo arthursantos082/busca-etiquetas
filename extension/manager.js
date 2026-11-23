@@ -32,6 +32,33 @@ async function load() {
   library = Array.isArray(d.library) ? d.library : [];
   assignments = d.assignments && typeof d.assignments === 'object' ? d.assignments : {};
   render();
+  renderProtection();
+}
+
+// ---------- backup automático e aviso de restauração ----------
+async function renderProtection() {
+  const P = window.EtqProtect;
+  if (!P) return;
+  const d = await chrome.storage.local.get(['library', 'assignments', 'backupLast', 'restoreDismissed']);
+  let backups = [];
+  try {
+    backups = (await chrome.downloads.search({ filenameRegex: P.BACKUP_DIR, exists: true }))
+      .filter((it) => it.state !== 'interrupted' && P.FILE_RE.test(it.filename))
+      .sort((a, b) => (a.filename < b.filename ? 1 : -1));
+  } catch { /* sem permissão de downloads */ }
+
+  const last = d.backupLast ? d.backupLast.split('-').reverse().join('/') : null;
+  $('autoBackup').textContent = last
+    ? `Backup automático: último em ${last} (Downloads › ${P.BACKUP_DIR}, guarda ${P.KEEP} dias).`
+    : `Backup automático: diário, ao abrir o ChatClinic (Downloads › ${P.BACKUP_DIR}).`;
+
+  const wiped = P.looksWiped(d.library, d.assignments);
+  const asked = location.hash === '#restaurar';
+  const show = wiped && (asked || P.shouldOfferRestore({
+    wiped, usedBefore: false, backupCount: backups.length, dismissed: !!d.restoreDismissed
+  }));
+  $('restore').hidden = !show;
+  $('restoreFile').textContent = backups[0] ? 'Último backup automático: ' + backups[0].filename : '';
 }
 function save() {
   return chrome.storage.local.set({ library, assignments });
@@ -214,6 +241,7 @@ $('save').addEventListener('click', submit);
 $('cancel').addEventListener('click', resetForm);
 $('export').addEventListener('click', exportBackup);
 $('import').addEventListener('click', () => $('file').click());
+$('restoreBtn').addEventListener('click', () => $('file').click());
 $('file').addEventListener('change', (e) => { if (e.target.files[0]) importBackup(e.target.files[0]); e.target.value = ''; });
 chrome.storage.onChanged.addListener((c, area) => { if (area === 'local') load(); });
 

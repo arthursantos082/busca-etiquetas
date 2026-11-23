@@ -49,12 +49,24 @@
   .credit b { color: #6b7280; }
   .toast { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
   .toast.show { opacity: 1; }
+  .restore { border: 2px solid #dc2626; }
+  .rp { margin: 0 0 6px; font-size: 13px; }
+  .rf { margin: 0 0 10px; font-size: 11px; color: #6b7280; word-break: break-all; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1><img src="icons/icon48.png" alt="">Etiquetas ChatClinic</h1>
   <p class="hint">Só você vê estas etiquetas. Elas ficam salvas neste navegador.</p>
+
+  <div class="card restore" id="restore" hidden>
+    <h2 style="color:#b91c1c">Suas etiquetas sumiram?</h2>
+    <p class="rp">A extensão está vazia. Escolha o backup mais recente para trazer as etiquetas de volta.</p>
+    <p class="rf" id="restoreFile"></p>
+    <div class="btns">
+      <button class="primary" id="restoreBtn">Restaurar backup</button>
+    </div>
+  </div>
 
   <div class="card">
     <h2 id="formTitle">Nova etiqueta</h2>
@@ -90,10 +102,12 @@
       <input type="file" id="file" accept="application/json,.json">
     </div>
     <div class="small">Use para guardar suas etiquetas ou levá-las para outro computador.</div>
+    <div class="small" id="autoBackup"></div>
   </div>
   <div class="credit">Desenvolvido por <b>Gleidston Santos</b></div>
 </div>
 <div class="toast" id="toast"></div>
+<script src="protect/core.js"></script>
 <script src="manager.js"></script>
 </body>
 </html>

@@ -4,7 +4,8 @@
   "version": "1.0.1",
   "description": "Adicione suas próprias etiquetas às conversas do ChatClinic. Desenvolvido por Gleidston Santos.",
   "permissions": [
-    "storage"
+    "storage",
+    "downloads"
   ],
   "background": {
     "service_worker": "background.js"
@@ -32,7 +33,9 @@
       "js": [
         "content.js",
         "search/core.js",
-        "search/bar.js"
+        "search/bar.js",
+        "protect/core.js",
+        "protect/guard.js"
       ],
       "all_frames": true,
       "run_at": "document_idle"
